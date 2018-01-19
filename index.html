@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Calendar</title>
+	<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.8.0/fullcalendar.min.css">
+	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+	<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+	<!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.8.0/fullcalendar.print.css"></script> -->
+	<style type="text/css">
+		.content{
+			display: flex;
+		}
+		.calendar-view{
+			flex: 6;
+		}
+		.assets-view{
+			flex: 1;
+		}
+		.drag-container{
+			display: flex;
+			justify-content: space-around;
+			flex-direction: column;
+			padding: 2rem;
+		}
+		.draggable{
+			border-radius: 0.5rem;
+			padding: 1rem;
+			background: grey;
+			width: 100px;
+		}
+		.draggable:hover{
+			cursor: pointer;
+			border: 1px solid red;
+		}
+		.fc-event-custom{
+			border: 1px solid dodgerblue;
+			background: whitesmoke;
+			border-radius: 3px;
+			color: black;
+			padding: 1rem;
+			margin: 1rem;
+		}
+		.fc-event-custom:hover{
+			cursor: pointer;
+			background: lightgrey;
+		}
+		.fc-event{
+			position: relative;
+		}
+		.fc-close-button{
+			position: absolute;
+			right: 3px;
+			top: 3px;
+			z-index: 100;
+		}
+	</style>
+</head>
+<body>
+	<div class="content">		
+		<div id="calendar" class="calendar-view"></div>	
+		<div class="assets-view">
+			<div class="drag-container" id="external-events">		
+		      <div class='fc-event-custom' data-id='1'>Event 1</div>
+		      <div class='fc-event-custom' data-id='2'>Event 2</div>
+		      <div class='fc-event-custom' data-id='3'>Event 3</div>
+		      <div class='fc-event-custom' data-id='4'>Event 4</div>
+			</div>
+		</div>
+	</div>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  	<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.8.0/fullcalendar.min.js"></script>
+	<script type="text/javascript">
+
+		var events = {
+			1: {
+				title: 'Event 1',
+				stick: true 
+			},
+			2: {
+				title: 'Event 1',
+				stick: true 
+			},
+			3: {
+				title: 'Event 1',
+				stick: true 
+			},
+			4: {
+				title: 'Event 1',
+				stick: true 
+			}
+		}
+
+		var calendarOptions = {
+			editable: true,
+            slotEventOverlap    : false,
+			eventOverlap: false,
+            defaultView: 'agendaWeek',
+			header: {
+			  left: 'prev,next today',
+			  center: 'title',
+			  right: 'agendaWeek,agendaDay'
+			},
+			droppable: true,
+			dropAccept: '*',
+			dragOpacity: 0.8
+		}
+
+		var calendarMethods = {
+	        dayClick: function() {
+		        alert('a day has been clicked!');
+		    },
+		    eventRender: function(event, element){
+		    	addLayersToEvent(element);
+		    },
+		    viewRender: function(view, element) {
+		    },
+		    eventDragStart: function( event, jsEvent, ui, view ) {
+
+		    },
+		    eventAllow: function(dropLocation, draggedEvent) {
+		    	console.log(dropLocation.start.format('YYYY-MM-DD'));
+		    	if (isWeek) {
+			    	$('.fc-time-grid').find("[data-date='" + dropLocation.start.format('YYYY-MM-DD') + "']")
+			    				.not('.fc-day-header').append(weeklyHoverElement);			    		
+		    	}
+		    },
+			eventAfterAllRender: function(view)
+			{
+				console.log('eventAfterAllRender');
+				window.Calendar = this;
+			},
+			eventDrop: function(event, delta, revertFunc, jsEvent, ui, view)
+			{
+				removeHoverOverlay();
+			},
+		    eventReceive: function(event) {    	
+				removeHoverOverlay();
+		    }			
+		}
+
+		var weeklyHoverElement = document.createElement('DIV');
+		$(weeklyHoverElement).css({
+			'background': 'lightblue',
+			'position'	: 'absolute',
+			'left'		: 0,
+			'right'		: 0,
+			'top'		: 0,
+			'bottom'	: 0,
+			'z-index'	: 10
+		});
+		$(weeklyHoverElement).addClass('week-hover-overlay');
+
+		function addLayersToEvent(element) {
+			var btn = document.createElement('BUTTON');
+	    	$(btn).click(function(){
+	    		$('#calendar').fullCalendar('removeEvents');
+	    	})
+	    	var text = document.createTextNode('Close');
+	    	var x = document.createElement("SPAN");
+	    	var ic = document.createElement("I");
+	    	$(ic).addClass('fa fa-times');
+	    	x.append(ic);
+	    	btn.append(x);
+	    	$(btn).addClass('btn btn-danger fc-close-button');
+	 		element.append(btn);
+		}
+
+		function initializeEvents(){
+			$('#external-events .fc-event-custom').each(function() {
+				console.log("ID >> " + $(this).data('id'));		
+				$(this).data('event', events[$(this).data('id')]);
+				$(this).draggable({
+					zIndex: 999,
+					revert: true,
+					revertDuration: 0 
+				});
+		    });
+		}
+
+		function initializeCalendar(){
+			var options = {};
+			$.each(calendarOptions, function(key, value) {
+				options[key] = value;
+			})
+			$.each(calendarMethods, function(key, value) {
+				options[key] = value;
+			})
+			$('#calendar').fullCalendar(options);
+		}
+
+		function isWeek() {
+			return $('#calendar').fullCalendar('getView') == 'agendaWeek';
+		}
+
+		function addHoverOverlay() {
+
+		}
+
+		function removeHoverOverlay() {
+			$('.fc-day .week-hover-overlay').remove();
+		}
+
+		$(document).ready(function() {
+			
+		    initializeEvents();
+
+		    initializeCalendar();		    
+
+			console.log($('.fc-time-grid .fc-day'));
+			$('.fc-time-grid .fc-day').css('position','relative');
+		});
+	</script>
+</body>
+</html>
