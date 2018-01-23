@@ -53,6 +53,9 @@
 			top: 3px;
 			z-index: 100;
 		}
+		.fc-unthemed td.fc-today {
+		    background: none;
+		}
 	</style>
 </head>
 <body>
@@ -105,9 +108,10 @@
 			header: {
 			  left: 'prev,next today',
 			  center: 'title',
-			  right: 'agendaWeek,agendaDay'
+			  right: 'agendaWeek'
 			},
 			droppable: true,
+			allDaySlot: false,
 			dropAccept: '*',
 			dragOpacity: 0.8
 		}
@@ -117,12 +121,15 @@
 		        alert('a day has been clicked!');
 		    },
 		    eventRender: function(event, element){
-		    	addLayersToEvent(element);
+		    	addLayersToEvent(event, element);
 		    },
 		    viewRender: function(view, element) {
 		    },
 		    eventDragStart: function( event, jsEvent, ui, view ) {
 
+		    },
+		    eventDragStop: function( event, jsEvent, ui, view ) {
+		    	removeHoverOverlay();
 		    },
 		    eventAllow: function(dropLocation, draggedEvent) {
 		    	console.log(dropLocation.start.format('YYYY-MM-DD'));
@@ -143,8 +150,14 @@
 		    eventReceive: function(event) {    	
 		    	console.log(event);
 		    	$("#external-events .fc-event-custom[data-id='"+ event.id+"']").css('display', 'none');
-				removeHoverOverlay();
-		    }			
+				// removeHoverOverlay();
+		    },
+		    eventResizeStart: function( event, jsEvent, ui, view )  {
+		    	removeHoverOverlay();
+		    },
+		    eventResizeStop: function( event, jsEvent, ui, view ) { 
+		    	removeHoverOverlay();
+		    }
 		}
 
 		var weeklyHoverElement = document.createElement('DIV');
@@ -159,10 +172,12 @@
 		});
 		$(weeklyHoverElement).addClass('week-hover-overlay');
 
-		function addLayersToEvent(element) {
+		function addLayersToEvent(event, element) {
+			console.table(element);
 			var btn = document.createElement('BUTTON');
 	    	$(btn).click(function(){
-	    		$('#calendar').fullCalendar('removeEvents');
+	    		$('#calendar').fullCalendar('removeEvents', event.id);
+		    	$("#external-events .fc-event-custom[data-id='"+ event.id+"']").css('display', 'block');
 	    	})
 	    	var text = document.createTextNode('Close');
 	    	var x = document.createElement("SPAN");
@@ -181,7 +196,10 @@
 				$(this).draggable({
 					zIndex: 999,
 					revert: true,
-					revertDuration: 0 
+					revertDuration: 0,
+			        stop:function(event,ui){	           
+						removeHoverOverlay();
+			        }
 				});
 		    });
 		}
