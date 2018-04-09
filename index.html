@@ -2,9 +2,9 @@
 <html>
 <head>
 	<title>Calendar</title>
-	<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.8.0/fullcalendar.min.css">
-	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+	<link href="bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 	<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+	<link rel="stylesheet" type="text/css" href="fullcalendar.min.css">
 	<!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.8.0/fullcalendar.print.css"></script> -->
 	<style type="text/css">
 		.content{
@@ -70,11 +70,11 @@
 			</div>
 		</div>
 	</div>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment.min.js"></script>
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-  	<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.js"></script>
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.8.0/fullcalendar.min.js"></script>
+	<script src="jquery.min.js"></script>
+	<script src="moment.min.js"></script>
+	<script src="bootstrap.min.js"></script>
+	<script src="jquery-ui.js"></script>
+	<script type="text/javascript" src="fullcalendar.min.js"></script>
 	<script type="text/javascript">
 
 		var events = {
@@ -104,11 +104,11 @@
 			editable: true,
             slotEventOverlap    : false,
 			eventOverlap: false,
-            defaultView: 'agendaWeek',
+            defaultView: 'agendaDay',
 			header: {
 			  left: 'prev,next today',
 			  center: 'title',
-			  right: 'agendaWeek'
+			  right: 'agendaDay,agendaWeek'
 			},
 			droppable: true,
 			allDaySlot: false,
@@ -121,6 +121,7 @@
 		        alert('a day has been clicked!');
 		    },
 		    eventRender: function(event, element){
+				// console.log("element", element);
 		    	addLayersToEvent(event, element);
 		    },
 		    viewRender: function(view, element) {
@@ -137,14 +138,46 @@
 			    	$('.fc-time-grid').find("[data-date='" + dropLocation.start.format('YYYY-MM-DD') + "']")
 			    				.not('.fc-day-header').append(weeklyHoverElement);			    		
 		    	}
+				else {
+
+		    	}
 		    },
 			eventAfterAllRender: function(view)
 			{
 				console.log('eventAfterAllRender');
+				this.x = null, this.y = null;
+				context = this;
+				document.onmousemove = function(event) {
+					context.x = event.pageX,
+					context.y = event.pageY;
+				};
+				var cols = [[0, getSingleColumnWidth()], [getSingleColumnWidth(), getSingleColumnWidth() * 2], [getSingleColumnWidth() * 2, getSingleColumnWidth() * 3], [getSingleColumnWidth() * 3, getSingleColumnWidth() * 4]];
+
+				var col;
+				cols.forEach(function(element) {
+					console.log(context.x);
+					if(context.x > element[0] && context.x < element[1]) {
+						col = element;
+					}
+				});
+				console.log('col', col);
 				window.Calendar = this;
+					// 'right': getSingleColumnWidth() * 3 + $(".fc-axis.fc-time.fc-widget-content").css("width"),
+				$(weeklyHoverElement).css({
+					'background': 'lightblue',
+					'position': 'absolute',
+					'left': 0,
+					'top': 0,
+					'bottom': 0,
+					'z-index': 10,
+					'width' : getSingleColumnWidth()
+				});
+				$(weeklyHoverElement).addClass('week-hover-overlay');
+
 			},
 			eventDrop: function(event, delta, revertFunc, jsEvent, ui, view)
 			{
+				console.log('here');
 				removeHoverOverlay();
 			},
 		    eventReceive: function(event) {    	
@@ -161,16 +194,6 @@
 		}
 
 		var weeklyHoverElement = document.createElement('DIV');
-		$(weeklyHoverElement).css({
-			'background': 'lightblue',
-			'position'	: 'absolute',
-			'left'		: 0,
-			'right'		: 0,
-			'top'		: 0,
-			'bottom'	: 0,
-			'z-index'	: 10
-		});
-		$(weeklyHoverElement).addClass('week-hover-overlay');
 
 		function addLayersToEvent(event, element) {
 			console.table(element);
@@ -187,6 +210,12 @@
 	    	btn.append(x);
 	    	$(btn).addClass('btn btn-danger fc-close-button');
 	 		element.append(btn);
+			$(element).css('width', getSingleColumnWidth() + 'px');
+			$(element).css('left', 0);
+		}
+		
+		function getSingleColumnWidth() {
+			return (document.querySelector('.fc-time-grid').offsetWidth / 4) ;
 		}
 
 		function initializeEvents(){
